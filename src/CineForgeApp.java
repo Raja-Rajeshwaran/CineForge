@@ -181,6 +181,8 @@ public class CineForgeApp extends JFrame {
     
     private void initializeUI() {
         setTitle("CineForge - AI Movie Plot Generator");
+        ImageIcon icon = new ImageIcon("C:\\Users\\LENOVO\\Downloads\\CineForge.png");
+    	setIconImage(icon.getImage());
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1200, 800);
         setLocationRelativeTo(null);
