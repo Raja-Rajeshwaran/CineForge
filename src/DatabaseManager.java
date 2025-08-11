@@ -3,25 +3,26 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DatabaseManager {
-    private static final String DB_URL = "jdbc:mysql://localhost:3306/cineforge";
-    private static final String DB_USER = "root";
-    private static final String DB_PASSWORD = "Rr@8754737944"; 
-    
-    private Connection connection;
-    
-    public DatabaseManager() {
-        try {
-            Class.forName("com.mysql.cj.jdbc.Driver");
-            
-            connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
-            
-            createTables();
-            
-        } catch (Exception e) {
-            System.err.println("Database connection failed: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
+	private static final String DB_URL = "jdbc:mysql://localhost:3306/cineforge";
+	private static final String DB_USER = "root";
+	private static final String DB_PASSWORD = System.getenv("DB_PASSWORD"); // Load from env variable
+	Connection connection;
+	public DatabaseManager() {
+	    try {
+	        if (DB_PASSWORD == null) {
+	            throw new RuntimeException("Database password not set! Please set DB_PASSWORD as an environment variable.");
+	        }
+
+	        Class.forName("com.mysql.cj.jdbc.Driver");
+	        connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+	        createTables();
+
+	    } catch (Exception e) {
+	        System.err.println("Database connection failed: " + e.getMessage());
+	        e.printStackTrace();
+	    }
+	}
+
     
     private void createTables() throws SQLException {
         String createTableSQL = """
