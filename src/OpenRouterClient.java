@@ -9,130 +9,117 @@ import com.google.gson.JsonParser;
 
 public class OpenRouterClient {
     private static final String API_URL = "https://openrouter.ai/api/v1/chat/completions";
-    private static final String API_TOKEN = System.getenv("OPENROUTER_API_KEY");
-    
+    private static final String API_TOKEN = System.getenv("OPEN_ROUTER_API");
+
     private final HttpClient httpClient;
-    
+
     public OpenRouterClient() {
         this.httpClient = HttpClient.newBuilder()
-            .connectTimeout(Duration.ofSeconds(30))
+            .connectTimeout(Duration.ofSeconds(100))
             .build();
     }
-    
+
+    // Main function that generates the full story in chunks
     public String generatePlot(String genre, String setting, String tone, String cinematicTone, String characters, String keywords) throws Exception {
-        String prompt = buildPlotPrompt(genre, setting, tone, cinematicTone, characters, keywords);
-        
+        StringBuilder story = new StringBuilder();
+
+        // Generate Intro
+        String introPrompt = buildPlotPrompt(genre, setting, tone, cinematicTone, characters, keywords, "intro");
+        story.append(sendRequest(introPrompt)).append("\n\n");
+
+        // Generate First Half
+        String firstHalfPrompt = buildPlotPrompt(genre, setting, tone, cinematicTone, characters, keywords, "first_half");
+        firstHalfPrompt = "Continue the story based on the intro:\n" + story + "\n" + firstHalfPrompt;
+        story.append(sendRequest(firstHalfPrompt)).append("\n\n");
+
+        // Generate Second Half
+        String secondHalfPrompt = buildPlotPrompt(genre, setting, tone, cinematicTone, characters, keywords, "second_half");
+        secondHalfPrompt = "Continue the story based on the first half:\n" + story + "\n" + secondHalfPrompt;
+        story.append(sendRequest(secondHalfPrompt));
+
+        return story.toString();
+    }
+
+    // Send request to OpenRouter
+    private String sendRequest(String prompt) throws IOException, InterruptedException {
         String jsonPayload = String.format(
             """
             {
               "model": "mistralai/mixtral-8x7b-instruct",
               "messages": [
-                {"role": "system", "content": "You are a master storyteller crafting cinematic narratives with powerful emotional impact. Your stories feature compelling titles, natural two-part structure, and multiple goosebumps-inducing moments."},
+                {"role": "system", "content": "You are a master storyteller crafting cinematic narratives with powerful emotional impact."},
                 {"role": "user", "content": "%s"}
               ],
               "temperature": 0.85,
-              "max_tokens": 3000,
-              "stop": null
+              "max_tokens": 800
             }
             """, escapeJson(prompt)
         );
-        
+
         HttpRequest request = HttpRequest.newBuilder()
             .uri(URI.create(API_URL))
-            .timeout(Duration.ofSeconds(150))  // Increased timeout for longer stories
+            .timeout(Duration.ofSeconds(60))
             .header("Authorization", "Bearer " + API_TOKEN)
             .header("Content-Type", "application/json")
             .POST(HttpRequest.BodyPublishers.ofString(jsonPayload))
             .build();
-            
-        try {
-            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-            if (response.statusCode() == 200) {
-                return parseResponse(response.body());
-            } else {
-                System.out.println("OpenRouter Error Code: " + response.statusCode());
-                System.out.println("Body: " + response.body());
-                return "⚠️ Failed to generate plot. Try again or check API key.";
-            }
-        } catch (IOException | InterruptedException e) {
-            System.err.println("API call failed: " + e.getMessage());
-            return "⚠️ Network error occurred while generating plot.";
+
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+        if (response.statusCode() == 200) {
+            return parseResponse(response.body());
+        } else {
+            System.out.println("OpenRouter Error Code: " + response.statusCode());
+            System.out.println("Body: " + response.body());
+            return "⚠️ Failed to generate plot. Check API key or try again.";
         }
     }
-    
-    private String buildPlotPrompt(String genre, String setting, String tone, String cinematicTone, String characters, String keywords) {
+
+    // Build concise prompt per chunk
+    private String buildPlotPrompt(String genre, String setting, String tone, String cinematicTone, String characters, String keywords, String part) {
         StringBuilder prompt = new StringBuilder();
-        prompt.append("Create a complete, immersive ")
-              .append(cinematicTone)
-              .append(" narrative with the following requirements:\n\n")
-              .append("TITLE: Begin with a compelling, cinematic title that captures the essence of the story.\n\n")
-              .append("SETTING: Set in ")
-              .append(setting)
-              .append(". This is a ")
-              .append(genre.toLowerCase())
-              .append(" story with a ")
-              .append(tone.toLowerCase())
-              .append(" tone.\n\n");
-              
+        switch (part) {
+            case "intro":
+                prompt.append("Write a cinematic story title and brief setup for a ")
+                      .append(genre.toLowerCase())
+                      .append(" story set in ").append(setting)
+                      .append(" with a ").append(tone.toLowerCase())
+                      .append(" tone. Introduce main characters and motivations. Keep it concise, ~150 words.");
+                break;
+            case "first_half":
+                prompt.append("Develop the first half of the story: build the world, introduce conflict, include suspense and emotional moments. Limit ~400 words.");
+                break;
+            case "second_half":
+                prompt.append("Conclude the story: resolve conflicts, escalate stakes, include 2-3 climactic moments. Limit ~400 words.");
+                break;
+            default:
+                prompt.append("Write a compelling cinematic story based on the given setting and characters.");
+        }
+
         if (characters != null && !characters.trim().isEmpty()) {
-            prompt.append("CHARACTERS: ").append(characters).append(". Develop these characters with depth, motivations, and meaningful arcs.\n\n");
-        } else {
-            prompt.append("CHARACTERS: Create compelling, multi-dimensional characters whose journeys drive the narrative.\n\n");
+            prompt.append("\nCharacters: ").append(characters).append(".");
         }
-              
         if (keywords != null && !keywords.trim().isEmpty()) {
-            prompt.append("THEMES: Naturally incorporate these themes: ").append(keywords).append(".\n\n");
+            prompt.append("\nThemes: ").append(keywords).append(".");
         }
-        
-        prompt.append("STRUCTURE:\n")
-              .append("- First Half: Establish the world, introduce characters, and build the central conflict. Create intrigue and emotional investment.\n")
-              .append("- Second Half: Escalate the stakes, intensify the conflict, and drive toward a powerful, satisfying resolution.\n\n")
-              .append("GOOSEBUMPS MOMENTS: Include at least 4-5 moments throughout the story that give the audience goosebumps. These could be:\n")
-              .append("  * Shocking revelations or plot twists\n")
-              .append("  * Intense emotional confrontations\n")
-              .append("  * Breathtaking action sequences\n")
-              .append("  * Profound character realizations\n")
-              .append("  * Haunting or beautiful imagery\n")
-              .append("  * Moments of pure terror or ecstasy\n\n")
-              .append("WRITING STYLE:\n")
-              .append("- Write as a flowing narrative without section breaks\n")
-              .append("- Create vivid, cinematic scenes with sensory details\n")
-              .append("- Build tension gradually and release it dramatically\n")
-              .append("- Use authentic dialogue that reveals character\n")
-              .append("- Maintain the ")
-              .append(cinematicTone)
-              .append(" style throughout\n")
-              .append("- Ensure the story feels complete and immersive\n\n")
-              .append("Begin with the TITLE, then write the complete narrative that delivers all these elements.");
-              
         return prompt.toString();
     }
-    
+
+    // Parse JSON response
     private String parseResponse(String responseBody) {
         try {
             JsonObject obj = JsonParser.parseString(responseBody).getAsJsonObject();
-            String content = obj
-                .getAsJsonArray("choices")
-                .get(0).getAsJsonObject()
-                .getAsJsonObject("message")
-                .get("content").getAsString();
-                
-            if (content.length() > 800 && (content.endsWith(".") || content.endsWith("!") || content.endsWith("?") || content.endsWith("\""))) {
-                String[] lines = content.split("\n", 2);
-                if (lines.length > 1 && lines[0].trim().length() > 0) {
-                    return content;
-                } else {
-                    return "TITLE: Untitled\n\n" + content;
-                }
-            } else {
-                return content + "\n\n[Note: The story may be incomplete. Try regenerating for a fuller narrative.]";
-            }
+            String content = obj.getAsJsonArray("choices")
+                                .get(0).getAsJsonObject()
+                                .getAsJsonObject("message")
+                                .get("content").getAsString();
+            return content;
         } catch (Exception e) {
             System.err.println("Error parsing OpenRouter response: " + e.getMessage());
             return "⚠️ Could not parse response from OpenRouter.";
         }
     }
-    
+
     private String escapeJson(String text) {
         return text.replace("\"", "\\\"")
                    .replace("\n", "\\n")
