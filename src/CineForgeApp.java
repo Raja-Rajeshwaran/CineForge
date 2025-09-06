@@ -8,13 +8,15 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-
 @SuppressWarnings("serial")
 public class CineForgeApp extends JFrame {
-    private static final Color DARK_BG = new Color(20, 25, 35);
-    private static final Color CARD_BG = new Color(35, 42, 55);
-    private static final Color ACCENT_COLOR = new Color(100, 150, 255);
-    private static final Color TEXT_COLOR = new Color(220, 225, 235);
+    // Cinematic movie website color scheme
+    private static final Color DARK_BG = new Color(15, 15, 25);              // Deep theater black-blue
+    private static final Color CARD_BG = new Color(25, 25, 40);              // Dark blue-gray for panels
+    private static final Color ACCENT_COLOR = new Color(212, 175, 55);      // Gold accent (like movie awards)
+    private static final Color SECONDARY_ACCENT = new Color(180, 30, 30);    // Red accent (like cinema curtains)
+    private static final Color TEXT_COLOR = new Color(230, 230, 240);        // Off-white text
+    private static final Color SUBTLE_TEXT = new Color(170, 170, 185);      // Dimmed text for secondary elements
     private static final Font MAIN_FONT = new Font("Arial", Font.PLAIN, 14);
     private JComboBox<String> genreCombo;
     private JTextField settingField;
@@ -182,7 +184,7 @@ public class CineForgeApp extends JFrame {
     private void initializeUI() {
         setTitle("CineForge - AI Movie Plot Generator");
         ImageIcon icon = new ImageIcon("C:\\Users\\LENOVO\\Downloads\\CineForge.png");
-    	setIconImage(icon.getImage());
+        setIconImage(icon.getImage());
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1200, 800);
         setLocationRelativeTo(null);
@@ -208,7 +210,7 @@ public class CineForgeApp extends JFrame {
         
         JLabel subtitleLabel = new JLabel("AI-Powered Movie Plot Generator");
         subtitleLabel.setFont(MAIN_FONT);
-        subtitleLabel.setForeground(TEXT_COLOR);
+        subtitleLabel.setForeground(SUBTLE_TEXT);
         
         JPanel titlePanel = new JPanel(new BorderLayout());
         titlePanel.setBackground(DARK_BG);
@@ -358,7 +360,7 @@ public class CineForgeApp extends JFrame {
                            "accessed from the history panel on the right.");
         
         JScrollPane scrollPane = new JScrollPane(plotTextArea);
-        scrollPane.setBorder(new LineBorder(ACCENT_COLOR.darker(), 1));
+        scrollPane.setBorder(new LineBorder(ACCENT_COLOR, 1));
         scrollPane.getViewport().setBackground(DARK_BG);
         
         panel.add(scrollPane, BorderLayout.CENTER);
@@ -366,6 +368,8 @@ public class CineForgeApp extends JFrame {
         exportButton = createStyledButton("💾 Export to TXT");
         exportButton.addActionListener(e -> exportPlot());
         exportButton.setEnabled(false);
+        exportButton.setBackground(SECONDARY_ACCENT);
+        exportButton.setForeground(Color.WHITE);
         
         JPanel exportPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         exportPanel.setBackground(CARD_BG);
@@ -409,7 +413,7 @@ public class CineForgeApp extends JFrame {
         historyList.setForeground(TEXT_COLOR);
         historyList.setFont(MAIN_FONT);
         historyList.setSelectionBackground(ACCENT_COLOR);
-        historyList.setSelectionForeground(Color.WHITE);
+        historyList.setSelectionForeground(new Color(20, 20, 35));
         historyList.setCellRenderer(new PlotListCellRenderer());
         
         historyList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
@@ -444,7 +448,7 @@ public class CineForgeApp extends JFrame {
         });
         
         JScrollPane historyScroll = new JScrollPane(historyList);
-        historyScroll.setBorder(new LineBorder(ACCENT_COLOR.darker(), 1));
+        historyScroll.setBorder(new LineBorder(ACCENT_COLOR, 1));
         historyScroll.getViewport().setBackground(DARK_BG);
         
         panel.add(sortPanel, BorderLayout.NORTH);
@@ -454,13 +458,14 @@ public class CineForgeApp extends JFrame {
         bottomPanel.setBackground(CARD_BG);
         
         JLabel historyLabel = new JLabel("<html><center>Double-click to load<br>Right-click for options<br>Ctrl/Cmd+Click for multiple selection</center></html>");
-        historyLabel.setForeground(TEXT_COLOR.darker());
+        historyLabel.setForeground(SUBTLE_TEXT);
         historyLabel.setFont(new Font("Segoe UI", Font.ITALIC, 10));
         historyLabel.setHorizontalAlignment(SwingConstants.CENTER);
         
         deleteButton = createStyledButton("🗑️ Delete Selected");
         deleteButton.setFont(new Font("Segoe UI", Font.PLAIN, 11));
-        deleteButton.setBackground(new Color(220, 53, 69)); 
+        deleteButton.setBackground(SECONDARY_ACCENT);
+        deleteButton.setForeground(Color.WHITE);
         deleteButton.setEnabled(false);
         deleteButton.addActionListener(e -> deleteSelectedPlots());
         
@@ -478,7 +483,7 @@ public class CineForgeApp extends JFrame {
         statusPanel.setBorder(new EmptyBorder(5, 20, 10, 20));
         
         JLabel statusLabel = new JLabel("Ready");
-        statusLabel.setForeground(TEXT_COLOR);
+        statusLabel.setForeground(SUBTLE_TEXT);
         statusLabel.setFont(MAIN_FONT);
         
         statusPanel.add(statusLabel, BorderLayout.WEST);
@@ -490,7 +495,7 @@ public class CineForgeApp extends JFrame {
         JPanel panel = new JPanel();
         panel.setBackground(CARD_BG);
         panel.setBorder(BorderFactory.createCompoundBorder(
-            new LineBorder(ACCENT_COLOR.darker(), 1),
+            new LineBorder(ACCENT_COLOR, 1),
             new EmptyBorder(15, 15, 15, 15)
         ));
         
@@ -510,11 +515,11 @@ public class CineForgeApp extends JFrame {
     
     private JTextField createStyledTextField(String placeholder) {
         JTextField field = new JTextField();
-        field.setBackground(DARK_BG);
+        field.setBackground(new Color(20, 20, 35));
         field.setForeground(TEXT_COLOR);
         field.setFont(MAIN_FONT);
         field.setBorder(BorderFactory.createCompoundBorder(
-            new LineBorder(ACCENT_COLOR.darker(), 1),
+            new LineBorder(ACCENT_COLOR, 1),
             new EmptyBorder(8, 12, 8, 12)
         ));
         field.setToolTipText(placeholder);
@@ -523,7 +528,7 @@ public class CineForgeApp extends JFrame {
     
     private JComboBox<String> createStyledComboBox(String[] items) {
         JComboBox<String> combo = new JComboBox<>(items);
-        combo.setBackground(DARK_BG);
+        combo.setBackground(new Color(20, 20, 35));
         combo.setForeground(TEXT_COLOR);
         combo.setFont(MAIN_FONT);
         return combo;
@@ -532,8 +537,8 @@ public class CineForgeApp extends JFrame {
     private JButton createStyledButton(String text) {
         JButton button = new JButton(text);
         button.setBackground(ACCENT_COLOR);
-        button.setForeground(Color.WHITE);
-        button.setFont(MAIN_FONT);
+        button.setForeground(new Color(20, 20, 35));
+        button.setFont(MAIN_FONT.deriveFont(Font.BOLD));
         button.setBorder(new EmptyBorder(10, 15, 10, 15));
         button.setFocusPainted(false);
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
@@ -779,7 +784,7 @@ public class CineForgeApp extends JFrame {
         
         JPopupMenu contextMenu = new JPopupMenu();
         contextMenu.setBackground(CARD_BG);
-        contextMenu.setBorder(new LineBorder(ACCENT_COLOR.darker(), 1));
+        contextMenu.setBorder(new LineBorder(ACCENT_COLOR, 1));
         
         if (selectedIndices.length == 1) {
             Plot selectedPlot = historyList.getSelectedValue();
@@ -799,7 +804,7 @@ public class CineForgeApp extends JFrame {
         
         JMenuItem deleteItem = new JMenuItem("🗑️ Delete Plot" + (selectedIndices.length > 1 ? "s" : ""));
         deleteItem.setBackground(CARD_BG);
-        deleteItem.setForeground(new Color(220, 53, 69));
+        deleteItem.setForeground(SECONDARY_ACCENT);
         deleteItem.addActionListener(e -> deleteSelectedPlots());
         contextMenu.add(deleteItem);
         
@@ -874,7 +879,6 @@ public class CineForgeApp extends JFrame {
         int[] selectedIndices = historyList.getSelectedIndices();
         if (selectedIndices.length == 0) return;
         
-        // Get selected plots
         List<Plot> selectedPlots = new ArrayList<>();
         List<Long> selectedIds = new ArrayList<>();
         for (int index : selectedIndices) {
@@ -975,7 +979,6 @@ public class CineForgeApp extends JFrame {
                         historyModel.addElement(plot);
                     }
 
-
                     deleteButton.setEnabled(false);
                     
                 } catch (Exception e) {
@@ -1005,7 +1008,7 @@ public class CineForgeApp extends JFrame {
             
             if (isSelected) {
                 setBackground(ACCENT_COLOR);
-                setForeground(Color.WHITE);
+                setForeground(new Color(20, 20, 35));
             } else {
                 setBackground(DARK_BG);
                 setForeground(TEXT_COLOR);
